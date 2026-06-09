@@ -67,10 +67,10 @@ async function changeState(action) {
   state = action(state, now);
 
   await saveState();
-  ();
+  render();
 }
 
-function () {
+function render() {
   if (!state) return;
 
   const now = Game.nowWithOffset(state);
