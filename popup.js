@@ -5,6 +5,8 @@ const DEFAULT_PET = {
   lastUpdated: Date.now()
 };
 
+let pet = { ...DEFAULT_PET };
+
 const petElement = document.getElementById("pet");
 const statusElement = document.getElementById("status");
 
@@ -17,10 +19,19 @@ const playButton = document.getElementById("playButton");
 const sleepButton = document.getElementById("sleepButton");
 const resetButton = document.getElementById("resetButton");
 
-let pet = { ...DEFAULT_PET };
-
 function clamp(value) {
   return Math.max(0, Math.min(100, value));
+}
+
+function makeSprite(face) {
+  return `
+⠀⠀⠀⠀⠀⠀⠀⠀⡴⠒⢦⠀⠀⠀⡴⠲⣄
+⠀⠀⠀⠀⠀⠀⠀⠀⡇⡄⢸⠀⠀⠀⡇⡀⢹
+⠀⠀⠀⠀⠀⠀⠀⣀⡧⠷⠚⠓⠒⠦⠧⣇⣸
+⠀⠀⠀⠀⠀⠀⢰⠃⠀⠀⠀⠀⠀⠀⠀⠀⠈⢧
+⠀⠀⠀⠀⠀⠀⠘⡆⠀${face}⠀⢈⡇
+⠀⠀⠀⠀⠀⠀⠀⠙⠶⠤⠤⠤⠤⠤⠤⠤⠖⠋
+`;
 }
 
 function applyTimeDecay(petData) {
@@ -33,8 +44,8 @@ function applyTimeDecay(petData) {
 
   return {
     hunger: clamp(petData.hunger + minutesPassed * 2),
-    happiness: clamp(petData.happiness - minutesPassed * 1),
-    energy: clamp(petData.energy - minutesPassed * 1),
+    happiness: clamp(petData.happiness - minutesPassed),
+    energy: clamp(petData.energy - minutesPassed),
     lastUpdated: now
   };
 }
@@ -42,35 +53,35 @@ function applyTimeDecay(petData) {
 function getMood() {
   if (pet.hunger >= 90) {
     return {
-      face: "=T.T=",⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-      status: "Your pet is starving."
+      face: "⠂⠀⠀⠒⠀⠀⠂",
+      status: "Your Tomodachi is starving."
     };
   }
 
   if (pet.energy <= 10) {
     return {
-      face: "=-.-=",
-      status: "Your pet is exhausted."
+      face: "⠤⠀⠀⠐⠀⠀⠤",
+      status: "Your Tomodachi is exhausted."
     };
   }
 
   if (pet.happiness <= 10) {
     return {
-      face: "=._.=",
-      status: "Your pet is sad."
+      face: "⠂⠀⠀⠔⠀⠀⠂",
+      status: "Your Tomodachi is sad."
     };
   }
 
   if (pet.hunger <= 30 && pet.happiness >= 70 && pet.energy >= 40) {
     return {
-      face: "=^.^=",
-      status: "Your pet is happy."
+      face: "⠈⠀⠀⠐⠀⠀⠈",
+      status: "Your Tomodachi is happy."
     };
   }
 
   return {
-    face: "=o.o=",
-    status: "Your pet is okay."
+    face: "⠐⠀⠀⠐⠀⠀⠐",
+    status: "Your Tomodachi is okay."
   };
 }
 
@@ -80,7 +91,8 @@ function render() {
   energyBar.value = pet.energy;
 
   const mood = getMood();
-  petElement.textContent = mood.face;
+
+  petElement.textContent = makeSprite(mood.face);
   statusElement.textContent = mood.status;
 }
 
@@ -130,7 +142,6 @@ function resetPet() {
 function loadPet() {
   chrome.storage.local.get(["pet"], (result) => {
     pet = result.pet || { ...DEFAULT_PET };
-
     pet = applyTimeDecay(pet);
     savePet();
     render();
