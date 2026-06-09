@@ -1,1 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Simple Tamagochi</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <main class="container">
+    <h1>Simple Tamagochi</h1>
 
+    <div id="pet" class="pet">=^.^=</div>
+    <p id="status">Loading...</p>
+
+    <div class="stats">
+      <label>
+        Hunger
+        <progress id="hunger" value="50" max="100"></progress>
+      </label>
+
+      <label>
+        Happiness
+        <progress id="happiness" value="50" max="100"></progress>
+      </label>
+
+      <label>
+        Energy
+        <progress id="energy" value="50" max="100"></progress>
+      </label>
+    </div>
+
+    <div class="buttons">
+      <button id="feedButton">Feed</button>
+      <button id="playButton">Play</button>
+      <button id="sleepButton">Sleep</button>
+    </div>
+
+    <button id="resetButton" class="reset">Reset pet</button>
+  </main>
+
+  <script src="popup.js"></script>
+</body>
+</html>
