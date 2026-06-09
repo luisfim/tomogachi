@@ -28,6 +28,10 @@ const upButton = document.getElementById("upButton");
 const downButton = document.getElementById("downButton");
 const closePongButton = document.getElementById("closePongButton");
 
+const nameTitle = document.getElementById("nameTitle");
+const nameInput = document.getElementById("nameInput");
+const saveNameButton = document.getElementById("saveNameButton");
+
 let state;
 let pong = null;
 let pongAnimationId = null;
@@ -63,14 +67,20 @@ async function changeState(action) {
   state = action(state, now);
 
   await saveState();
-  render();
+  ();
 }
 
-function render() {
+function () {
   if (!state) return;
 
   const now = Game.nowWithOffset(state);
   const display = Game.getDisplay(state, now);
+
+  nameTitle.textContent = display.name || "Tomogachi";
+
+  if (document.activeElement !== nameInput) {
+    nameInput.value = display.name || "";
+}
 
   document.body.classList.toggle("sleep-mode", display.isSleeping);
   document.body.classList.toggle("dead-mode", display.isDead);
@@ -91,12 +101,16 @@ function render() {
   const isSleeping = state.isSleeping;
   const blocked = isEgg || isDead || isSleeping;
 
-  petEggButton.disabled = !isEgg || isDead;
-  saladButton.disabled = blocked;
-  friesButton.disabled = blocked;
-  playButton.disabled = blocked;
-  cleanButton.disabled = blocked;
-  sleepButton.disabled = blocked;
+  petEggButton.classList.toggle("hidden", !isEgg || isDead);
+  
+  saladButton.classList.toggle("hidden", blocked);
+  friesButton.classList.toggle("hidden", blocked);
+  playButton.classList.toggle("hidden", blocked);
+  cleanButton.classList.toggle("hidden", blocked);
+  sleepButton.classList.toggle("hidden", blocked);
+  
+  saveNameButton.classList.toggle("hidden", isDead);
+  nameInput.classList.toggle("hidden", isDead);
 }
 
 async function tickAndSave() {
@@ -282,6 +296,18 @@ cleanButton.addEventListener("click", () => {
 
 sleepButton.addEventListener("click", () => {
   changeState((currentState, now) => Game.sleep(currentState, now));
+});
+
+saveNameButton.addEventListener("click", () => {
+  changeState((currentState, now) => {
+    return Game.setName(currentState, nameInput.value, now);
+  });
+});
+
+nameInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    saveNameButton.click();
+  }
 });
 
 skipButton.addEventListener("click", () => {
