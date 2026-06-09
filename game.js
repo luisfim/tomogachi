@@ -74,6 +74,7 @@
       unhealthyDebt: 0,
       isSleeping: false,
       sleepEndsAt: null,
+      energyBeforeSleep: null,
 
       needs: {
         food: null,
@@ -170,9 +171,10 @@
   function startSleep(state, now, minutes = 10 + Math.random() * 5) {
     state.isSleeping = true;
     state.sleepEndsAt = now + minutes * MINUTE;
+    state.energyBeforeSleep = state.stats.energy;
     state.needs.sleep = null;
     state.nextNeedAt.sleep = null;
-    state.message = "Your Tomogachi is sleeping.";
+    state.message = `${state.name || "Tomogachi"} curled up and fell asleep.`;
   }
 
   function killPet(state, now) {
@@ -222,13 +224,14 @@
     if (state.isSleeping) {
       state.stats.energy = clamp(state.stats.energy + elapsedMinutes * 8);
 
-      if (now >= state.sleepEndsAt) {
-        state.isSleeping = false;
-        state.sleepEndsAt = null;
-        state.stats.energy = 100;
-        state.message = "Your Tomogachi woke up.";
-        scheduleNeed(state, "sleep", now);
-      }
+    if (now >= state.sleepEndsAt) {
+      state.isSleeping = false;
+      state.sleepEndsAt = null;
+      state.energyBeforeSleep = null;
+      state.stats.energy = 100;
+      state.message = `${state.name || "Tomogachi"} woke up fully rested.`;
+      scheduleNeed(state, "sleep", now);
+    }
     } else {
       state.stats.energy = clamp(state.stats.energy - elapsedMinutes * 0.3);
     }
@@ -302,6 +305,28 @@
     return state;
   }
 
+  function wakeUp(state, now = nowWithOffset(state)) {
+    state = tick(state, now);
+  
+    if (state.stage === STAGES.DEAD || !state.isSleeping) {
+      return state;
+    }
+  
+    state.isSleeping = false;
+    state.sleepEndsAt = null;
+  
+    if (typeof state.energyBeforeSleep === "number") {
+      state.stats.energy = state.energyBeforeSleep;
+    }
+  
+    state.energyBeforeSleep = null;
+    state.message = `${state.name || "Tomogachi"} was woken up by the bell and looks betrayed.`;
+  
+    scheduleNeed(state, "sleep", now);
+  
+    return state;
+  }
+
   function petEgg(state, now = nowWithOffset(state)) {
     state = tick(state, now);
 
@@ -316,13 +341,18 @@
   function setName(state, newName, now = nowWithOffset(state)) {
     state = tick(state, now);
   
+    if (state.stage !== STAGES.EGG) {
+      state.message = `${state.name || "Tomogachi"} already knows who it is.`;
+      return state;
+    }
+  
     const cleanName = String(newName || "")
       .trim()
       .replace(/\s+/g, " ")
       .slice(0, 16);
   
     state.name = cleanName || "Tomogachi";
-    state.message = `${state.name} accepts this name.`;
+    state.message = `${state.name} accepts this name from inside the egg.`;
   
     return state;
   }
@@ -625,6 +655,7 @@
     tick,
     petEgg,
     feed,
+    wakeUp,
     finishPlay,
     clean,
     sleep,
