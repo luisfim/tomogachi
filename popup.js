@@ -42,7 +42,7 @@ function applyTimeDecay(petData) {
 function getMood() {
   if (pet.hunger >= 90) {
     return {
-      face: "=T.T=",
+      face: "=T.T=",⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
       status: "Your pet is starving."
     };
   }
