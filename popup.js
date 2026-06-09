@@ -49,7 +49,12 @@ async function loadState() {
 
 async function saveState() {
   await chrome.storage.local.set({ [STORAGE_KEY]: state });
-  chrome.runtime.sendMessage({ type: "stateUpdated" }).catch(() => {});
+
+  try {
+    chrome.runtime.sendMessage({ type: "stateUpdated" });
+  } catch (error) {
+    console.log("Background message failed:", error);
+  }
 }
 
 async function changeState(action) {
