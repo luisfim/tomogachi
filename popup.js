@@ -30,6 +30,7 @@ const downButton = document.getElementById("downButton");
 const closePongButton = document.getElementById("closePongButton");
 
 const nameTitle = document.getElementById("nameTitle");
+const nameBox = document.getElementById("nameBox");
 const nameInput = document.getElementById("nameInput");
 const saveNameButton = document.getElementById("saveNameButton");
 
@@ -149,8 +150,7 @@ function render() {
   cleanButton.classList.toggle("hidden", blocked);
   sleepButton.classList.toggle("hidden", blocked);
   wakeButton.classList.toggle("hidden", !isSleeping || isDead);
-  saveNameButton.classList.toggle("hidden", isDead);
-  nameInput.classList.toggle("hidden", isDead);
+  nameBox.classList.toggle("hidden", !isEgg || isDead);
 }
 
 async function tickAndSave() {
