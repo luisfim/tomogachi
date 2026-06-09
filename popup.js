@@ -41,6 +41,45 @@ const controls = {
   down: false
 };
 
+function getPongDifficulty() {
+  if (state.stage === Game.STAGES.BABY) {
+    return {
+      label: "Baby mode",
+      targetScore: 2,
+      playerPaddleH: 52,
+      enemyPaddleH: 26,
+      enemySpeed: 1.2,
+      ballVX: 1.7,
+      ballVY: 1.1,
+      speedGain: 0.03
+    };
+  }
+
+  if (state.stage === Game.STAGES.ADULT) {
+    return {
+      label: "Adult mode",
+      targetScore: 4,
+      playerPaddleH: 34,
+      enemyPaddleH: 34,
+      enemySpeed: 2.4,
+      ballVX: 2.5,
+      ballVY: 1.8,
+      speedGain: 0.12
+    };
+  }
+
+  return {
+    label: "Normal mode",
+    targetScore: 3,
+    playerPaddleH: 40,
+    enemyPaddleH: 32,
+    enemySpeed: 1.8,
+    ballVX: 2,
+    ballVY: 1.4,
+    speedGain: 0.08
+  };
+}
+
 async function loadState() {
   const result = await chrome.storage.local.get(STORAGE_KEY);
 
@@ -139,25 +178,40 @@ function startPong() {
     return;
   }
 
+  if (pong) {
+    return;
+  }
+
   pongPanel.classList.remove("hidden");
+
+  const difficulty = getPongDifficulty();
 
   pong = {
     width: pongCanvas.width,
     height: pongCanvas.height,
+
     playerY: 50,
     enemyY: 50,
+
     paddleW: 8,
-    paddleH: 34,
+    playerPaddleH: difficulty.playerPaddleH,
+    enemyPaddleH: difficulty.enemyPaddleH,
+
+    enemySpeed: difficulty.enemySpeed,
+    targetScore: difficulty.targetScore,
+    speedGain: difficulty.speedGain,
+
     ballX: 110,
     ballY: 70,
-    ballVX: 2.4,
-    ballVY: 1.8,
+    ballVX: difficulty.ballVX,
+    ballVY: difficulty.ballVY,
     ballSize: 6,
+
     score: 0,
     enemyScore: 0
   };
 
-  pongStatus.textContent = "Score 3 points to finish playing.";
+  pongStatus.textContent = `${difficulty.label}: score ${pong.targetScore} points to finish playing.`;
 
   animatePong();
 }
@@ -173,10 +227,12 @@ function closePong() {
 }
 
 function resetBall(direction = 1) {
+  const difficulty = getPongDifficulty();
+
   pong.ballX = pong.width / 2;
   pong.ballY = pong.height / 2;
-  pong.ballVX = 2.4 * direction;
-  pong.ballVY = Math.random() > 0.5 ? 1.8 : -1.8;
+  pong.ballVX = difficulty.ballVX * direction;
+  pong.ballVY = Math.random() > 0.5 ? difficulty.ballVY : -difficulty.ballVY;
 }
 
 async function finishPong() {
@@ -195,14 +251,14 @@ function animatePong() {
   if (controls.up) pong.playerY -= 4;
   if (controls.down) pong.playerY += 4;
 
-  pong.playerY = Math.max(0, Math.min(pong.height - pong.paddleH, pong.playerY));
-
-  const enemyCenter = pong.enemyY + pong.paddleH / 2;
-
-  if (enemyCenter < pong.ballY - 8) pong.enemyY += 2;
-  if (enemyCenter > pong.ballY + 8) pong.enemyY -= 2;
-
-  pong.enemyY = Math.max(0, Math.min(pong.height - pong.paddleH, pong.enemyY));
+  pong.playerY = Math.max(0, Math.min(pong.height - pong.playerPaddleH, pong.playerY));
+  
+  const enemyCenter = pong.enemyY + pong.enemyPaddleH / 2;
+  
+  if (enemyCenter < pong.ballY - 8) pong.enemyY += pong.enemySpeed;
+  if (enemyCenter > pong.ballY + 8) pong.enemyY -= pong.enemySpeed;
+  
+  pong.enemyY = Math.max(0, Math.min(pong.height - pong.enemyPaddleH, pong.enemyY));
 
   pong.ballX += pong.ballVX;
   pong.ballY += pong.ballVY;
@@ -212,28 +268,32 @@ function animatePong() {
   }
 
   const hitsPlayer =
+    pong.ballVX < 0 &&
     pong.ballX <= 18 &&
     pong.ballX >= 10 &&
     pong.ballY + pong.ballSize >= pong.playerY &&
-    pong.ballY <= pong.playerY + pong.paddleH;
-
+    pong.ballY <= pong.playerY + pong.playerPaddleH;
+  
   const hitsEnemy =
+    pong.ballVX > 0 &&
     pong.ballX + pong.ballSize >= pong.width - 18 &&
     pong.ballX <= pong.width - 10 &&
     pong.ballY + pong.ballSize >= pong.enemyY &&
-    pong.ballY <= pong.enemyY + pong.paddleH;
-
+    pong.ballY <= pong.enemyY + pong.enemyPaddleH;
+  
   if (hitsPlayer) {
-    pong.ballVX = Math.abs(pong.ballVX) + 0.15;
+    pong.ballVX = Math.abs(pong.ballVX) + pong.speedGain;
+    pong.ballX = 19;
   }
-
+  
   if (hitsEnemy) {
-    pong.ballVX = -Math.abs(pong.ballVX) - 0.05;
+    pong.ballVX = -Math.abs(pong.ballVX) - pong.speedGain;
+    pong.ballX = pong.width - 25;
   }
 
   if (pong.ballX > pong.width) {
     pong.score += 1;
-    pongStatus.textContent = `Score: ${pong.score} / 3`;
+    pongStatus.textContent = `Score: ${pong.score} / ${pong.targetScore}`;
     resetBall(-1);
   }
 
@@ -244,13 +304,13 @@ function animatePong() {
   }
 
   ctx.clearRect(0, 0, pong.width, pong.height);
-  ctx.fillRect(10, pong.playerY, pong.paddleW, pong.paddleH);
-  ctx.fillRect(pong.width - 18, pong.enemyY, pong.paddleW, pong.paddleH);
+  ctx.fillRect(10, pong.playerY, pong.paddleW, pong.playerPaddleH);
+  ctx.fillRect(pong.width - 18, pong.enemyY, pong.paddleW, pong.enemyPaddleH);
   ctx.fillRect(pong.ballX, pong.ballY, pong.ballSize, pong.ballSize);
   ctx.font = "12px monospace";
-  ctx.fillText(`${pong.score} / 3`, 92, 14);
+  ctx.fillText(`${pong.score} / ${pong.targetScore}`, 92, 14);
 
-  if (pong.score >= 3) {
+  if (pong.score >= pong.targetScore) {
     finishPong();
     return;
   }
