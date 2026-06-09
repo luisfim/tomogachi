@@ -61,6 +61,20 @@
       <button id="skipButton" class="debug" title="Skip 2.5 minutes" aria-label="Skip 2.5 minutes">⏩</button>
       <button id="resetButton" class="danger" title="Reset pet" aria-label="Reset pet">🔄</button>
     </section>
+    <section id="pongPanel" class="pong hidden">
+      <h2>Pong</h2>
+    
+      <canvas id="pongCanvas" width="220" height="140"></canvas>
+    
+      <p id="pongStatus">Score 3 points to finish playing.</p>
+    
+      <div class="button-row">
+        <button id="upButton" title="Move up" aria-label="Move up">⬆️</button>
+        <button id="downButton" title="Move down" aria-label="Move down">⬇️</button>
+      </div>
+    
+      <button id="closePongButton" title="Close Pong" aria-label="Close Pong">❌</button>
+    </section>
   </main>
   <script src="game.js"></script>
   <script src="popup.js"></script>
