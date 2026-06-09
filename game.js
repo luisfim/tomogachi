@@ -313,6 +313,20 @@
     return tick(state, now);
   }
 
+  function setName(state, newName, now = nowWithOffset(state)) {
+    state = tick(state, now);
+  
+    const cleanName = String(newName || "")
+      .trim()
+      .replace(/\s+/g, " ")
+      .slice(0, 16);
+  
+    state.name = cleanName || "Tomogachi";
+    state.message = `${state.name} accepts this name.`;
+  
+    return state;
+  }
+  
   function feed(state, foodType, now = nowWithOffset(state)) {
     state = tick(state, now);
 
@@ -397,6 +411,29 @@
     return `${seconds}s`;
   }
 
+  function makeEggSprite() {
+  return [
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⢀⣀⣀⡀⠀⠀⠀",
+    "⠀⠀⠀⠀⢰⣿⣿⣿⣿⡆⠀⠀",
+    "⠀⠀⠀⢀⣿⣿⣿⣿⣿⣿⡀⠀",
+    "⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⡇⠀",
+    "⠀⠀⠀⠘⣿⣿⣿⣿⣿⣿⠃⠀",
+    "⠀⠀⠀⠀⠈⠛⠛⠛⠛⠁⠀⠀"
+  ].join("\n");
+}
+
+  function makeTombstoneSprite(name = "Tomogachi") {
+    return [
+      "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+      "⠀⠀⠀⠀⢀⣤⣤⣤⣤⡀⠀⠀",
+      "⠀⠀⠀⢠⣿⣿⣿⣿⣿⣿⡄⠀",
+      "⠀⠀⠀⢸⣿⠀R.I.P⠀⣿⡇⠀",
+      `⠀⠀⠀⢸⣿⠀${name.slice(0, 8).padEnd(8, " ")}⠀⣿⡇⠀`,
+      "⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⡇⠀",
+      "⠀⠀⠛⠛⠛⠛⠛⠛⠛⠛⠛⠀"
+    ].join("\n");
+  }
   function makeSprite(face) {
     return [
       "⠀⠀⠀⠀⠀⠀⠀⠀⡴⠒⢦⠀⠀⠀⡴⠲⣄",
@@ -490,12 +527,68 @@
   }
 
   function getStatusText(state) {
-    if (state.stage === STAGES.DEAD) return "Your Tomogachi has departed.";
-    if (state.stage === STAGES.EGG) return state.message || "The egg is waiting.";
-    if (state.isSleeping) return "Your Tomogachi is sleeping.";
-    if (state.health <= 25) return "Your Tomogachi is sick.";
-
-    return state.message || "Your Tomogachi is okay.";
+    const name = state.name || "Tomogachi";
+  
+    if (state.stage === STAGES.DEAD) {
+      return `${name} has left this tiny world.`;
+    }
+  
+    if (state.stage === STAGES.EGG) {
+      const eggMessages = [
+        "Something inside the egg taps back.",
+        "The egg wiggles like it heard you.",
+        "A tiny heartbeat echoes from inside.",
+        "The egg is warm. It wants attention.",
+        "The shell shakes with mysterious determination."
+      ];
+  
+      return state.message || eggMessages[Math.floor(Math.random() * eggMessages.length)];
+    }
+  
+    if (state.isSleeping) {
+      const sleepMessages = [
+        `${name} is dreaming of pixel snacks.`,
+        `${name} is asleep. The room feels quieter.`,
+        `${name} has entered battery-saving mode.`,
+        `${name} is snoring in lowercase.`
+      ];
+  
+      return sleepMessages[Math.floor(Math.random() * sleepMessages.length)];
+    }
+  
+    if (state.health <= 25) {
+      return `${name} looks fragile. It needs care soon.`;
+    }
+  
+    if (state.needs.clean) {
+      return `${name} has created a biohazard situation.`;
+    }
+  
+    if (state.needs.food) {
+      return `${name} is staring at you like you are the fridge.`;
+    }
+  
+    if (state.needs.play) {
+      return `${name} is bouncing with dangerous amounts of boredom.`;
+    }
+  
+    if (state.needs.sleep) {
+      return `${name} is blinking one eye at a time.`;
+    }
+  
+    if (state.stats.happiness >= 75 && state.stats.hunger <= 35) {
+      return `${name} is thriving in its tiny rectangle.`;
+    }
+  
+    const neutralMessages = [
+      `${name} is vibing quietly.`,
+      `${name} is contemplating browser tabs.`,
+      `${name} seems okay, but suspiciously quiet.`,
+      `${name} is waiting for something interesting to happen.`,
+      `${name} accepts your existence.`
+    ];
+  
+    return state.message || neutralMessages[Math.floor(Math.random() * neutralMessages.length)];
   }
 
   function getDisplay(state, now = nowWithOffset(state)) {
@@ -508,7 +601,12 @@
       statusText: getStatusText(state),
       timerText: getTimerText(state, now),
       nextNeedText: getNextNeedText(state, now),
-      sprite: makeSprite(getFace(state)),
+      sprite:
+        state.stage === STAGES.EGG
+          ? makeEggSprite()
+          : state.stage === STAGES.DEAD
+            ? makeTombstoneSprite(state.name)
+            : makeSprite(getFace(state)),
       activeNeeds: getActiveNeeds(state),
       badgeText: getBadgeText(state, now),
       isSleeping: state.isSleeping,
@@ -532,6 +630,7 @@
     sleep,
     skipTestTime,
     getDisplay,
+    setName,
     formatDuration
   };
 })(globalThis);
