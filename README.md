@@ -1,0 +1,2 @@
+# tomogachi
+Chrome pet extention
