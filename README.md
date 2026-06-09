@@ -4,7 +4,7 @@
 
 
 ## Screenshot
-<img src="./screenshot.jpeg" alt="Tomogachi screenshot" width="250">
+<img src="./screenshot.jpeg" alt="Tomogachi screenshot" width="200">
 
 ## Chrome Web Store
 
