@@ -18,6 +18,7 @@ const friesButton = document.getElementById("friesButton");
 const playButton = document.getElementById("playButton");
 const cleanButton = document.getElementById("cleanButton");
 const sleepButton = document.getElementById("sleepButton");
+const wakeButton = document.getElementById("wakeButton");
 const skipButton = document.getElementById("skipButton");
 const resetButton = document.getElementById("resetButton");
 
@@ -147,7 +148,7 @@ function render() {
   playButton.classList.toggle("hidden", blocked);
   cleanButton.classList.toggle("hidden", blocked);
   sleepButton.classList.toggle("hidden", blocked);
-  
+  wakeButton.classList.toggle("hidden", !isSleeping || isDead);
   saveNameButton.classList.toggle("hidden", isDead);
   nameInput.classList.toggle("hidden", isDead);
 }
@@ -356,6 +357,10 @@ cleanButton.addEventListener("click", () => {
 
 sleepButton.addEventListener("click", () => {
   changeState((currentState, now) => Game.sleep(currentState, now));
+});
+
+wakeButton.addEventListener("click", () => {
+  changeState((currentState, now) => Game.wakeUp(currentState, now));
 });
 
 saveNameButton.addEventListener("click", () => {
