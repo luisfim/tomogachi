@@ -1,11 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "Simple Tamagochi",
+  "name": "Simple Tomogachi",
   "version": "0.1.0",
-  "description": "A simple Tamagochi-style pet game in a Chrome extension.",
+  "description": "A simple Tomogachi-style pet game in a Chrome extension.",
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Simple Tamagochi"
+    "default_title": "Simple Tomagochi"
   },
   "permissions": ["storage"]
 }
