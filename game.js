@@ -226,7 +226,7 @@
         state.isSleeping = false;
         state.sleepEndsAt = null;
         state.stats.energy = 100;
-        state.message = "Your Tomagochi woke up.";
+        state.message = "Your Tomogachi woke up.";
         scheduleNeed(state, "sleep", now);
       }
     } else {
@@ -295,7 +295,7 @@
     }
 
     if (state.health <= 25) {
-      state.message = "Your Tomagochi is sick. Take better care of it.";
+      state.message = "Your Tomogachi is sick. Take better care of it.";
     }
 
     state.lastTickAt = now;
@@ -324,12 +324,12 @@
       state.stats.hunger = clamp(state.stats.hunger - 45);
       state.stats.happiness = clamp(state.stats.happiness + 12);
       state.unhealthyDebt = clamp(state.unhealthyDebt + 25);
-      state.message = "Tomagochi loved the fries, but it was not very healthy.";
+      state.message = "Tomogachi loved the fries, but it was not very healthy.";
     } else {
       state.stats.hunger = clamp(state.stats.hunger - 25);
       state.health = clamp(state.health + 5);
       state.unhealthyDebt = clamp(state.unhealthyDebt - 15);
-      state.message = "Tomagochi ate salad and feels healthier.";
+      state.message = "Tomogachi ate salad and feels healthier.";
     }
 
     scheduleNeed(state, "food", now);
@@ -346,7 +346,7 @@
     state.stats.happiness = clamp(state.stats.happiness + 22);
     state.stats.energy = clamp(state.stats.energy - 12);
     state.stats.hunger = clamp(state.stats.hunger + 8);
-    state.message = "Tomagochi had fun playing Pong.";
+    state.message = "Tomogachi had fun playing Pong.";
 
     scheduleNeed(state, "play", now);
     return state;
@@ -361,7 +361,7 @@
 
     state.stats.cleanliness = 100;
     state.health = clamp(state.health + 3);
-    state.message = "Tomagochi is clean now.";
+    state.message = "Tomogachi is clean now.";
 
     scheduleNeed(state, "clean", now);
     return state;
@@ -490,12 +490,12 @@
   }
 
   function getStatusText(state) {
-    if (state.stage === STAGES.DEAD) return "Your Tomagochi has departed.";
+    if (state.stage === STAGES.DEAD) return "Your Tomogachi has departed.";
     if (state.stage === STAGES.EGG) return state.message || "The egg is waiting.";
-    if (state.isSleeping) return "Your Tomagochi is sleeping.";
-    if (state.health <= 25) return "Your Tomagochi is sick.";
+    if (state.isSleeping) return "Your Tomogachi is sleeping.";
+    if (state.health <= 25) return "Your Tomogachi is sick.";
 
-    return state.message || "Your Tomagochi is okay.";
+    return state.message || "Your Tomogachi is okay.";
   }
 
   function getDisplay(state, now = nowWithOffset(state)) {
@@ -517,7 +517,7 @@
     };
   }
 
-  global.TomagochiGame = {
+  global.TomogachiGame = {
     STORAGE_KEY,
     STAGES,
     CONFIG,
