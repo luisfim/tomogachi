@@ -30,7 +30,6 @@
     adult: {
       food: [20, 30],
       play: [60, 70],
-      clean: [60, 90],
       sleep: [120, 130]
     }
   };
@@ -410,13 +409,13 @@
   }
 
   function getFace(state) {
-    if (state.stage === STAGES.DEAD) return "x⠀⠀⠔⠀⠀x";
-    if (state.stage === STAGES.EGG) return "·⠀⠀⠐⠀⠀·";
-    if (state.isSleeping) return "-⠀⠀⠐⠀⠀-";
-    if (state.health <= 25) return "⠂⠀⠀⠔⠀⠀⠂";
-    if (state.needs.clean) return "⠂⠀⠀⠤⠀⠀⠂";
-    if (state.needs.food) return "⠂⠀⠀⠒⠀⠀⠂";
-    if (state.needs.play) return "⠈⠀⠀⠌⠀⠀⠈";
+    if (state.stage === STAGES.DEAD) return "x⠀⠀.⠀⠀x";
+    if (state.stage === STAGES.EGG) return "0⠀⠀⠐⠀⠀0";
+    if (state.isSleeping) return "_⠀⠀.⠀⠀_";
+    if (state.health <= 25) return "e⠀⠀.⠀⠀e";
+    if (state.needs.clean) return "o⠀...⠀o";
+    if (state.needs.food) return "⠂⠀⠀o⠀⠀⠂";
+    if (state.needs.play) return "⠈⠀⠀u⠀⠀⠈";
     if (state.needs.sleep) return "-⠀⠀⠐⠀⠀-";
     if (state.stats.happiness >= 75 && state.stats.hunger <= 35) return "⠈⠀⠀⠐⠀⠀⠈";
 
