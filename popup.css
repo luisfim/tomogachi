@@ -16,12 +16,15 @@ h1 {
 }
 
 .pet {
-  font-size: 48px;
+  font-size: 14px;
+  line-height: 1;
+  white-space: pre;
   margin: 16px 0;
   background: white;
   border: 2px solid #222;
   border-radius: 12px;
-  padding: 20px;
+  padding: 16px;
+  overflow: hidden;
 }
 
 #status {
