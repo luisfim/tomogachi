@@ -2,7 +2,7 @@
   const MINUTE = 60 * 1000;
   const SECOND = 1000;
 
-  const STORAGE_KEY = "tomagochiState";
+  const STORAGE_KEY = "tomogachiState";
 
   const STAGES = {
     EGG: "egg",
@@ -55,7 +55,7 @@
   function createDefaultState(now = Date.now()) {
     return {
       version: 2,
-      name: "Tomagochi",
+      name: "Tomogachi",
       stage: STAGES.EGG,
       createdAt: now,
       stageStartedAt: now,
