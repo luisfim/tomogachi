@@ -8,10 +8,14 @@
 <body>
   <main class="shell">
     <header>
-      <h1>Tomogachi</h1>
+      <h1 id="nameTitle">Tomogachi</h1>
       <p id="stageText">Stage: Egg</p>
-    </header>
 
+      <div id="nameBox" class="name-box">
+        <input id="nameInput" type="text" maxlength="16" placeholder="Name your Tomogachi" />
+        <button id="saveNameButton" title="Save name" aria-label="Save name">✅</button>
+      </div>
+    </header>
     <section class="screen">
       <pre id="pet" class="pet"></pre>
       <p id="status">Loading...</p>
@@ -40,39 +44,24 @@
         <progress id="cleanliness" value="100" max="100"></progress>
       </label>
     </section>
-
     <section class="controls">
-      <button id="petEggButton">Pet Egg</button>
+      <button id="petEggButton" title="Pet egg" aria-label="Pet egg">👋</button>
 
       <div class="button-row">
-        <button id="saladButton">Salad</button>
-        <button id="friesButton">Fries</button>
+        <button id="saladButton" title="Give salad" aria-label="Give salad">🥗</button>
+        <button id="friesButton" title="Give fries" aria-label="Give fries">🍟</button>
       </div>
 
       <div class="button-row">
-        <button id="playButton">Play Pong</button>
-        <button id="cleanButton">Clean</button>
-        <button id="sleepButton">Sleep</button>
+        <button id="playButton" title="Play Pong" aria-label="Play Pong">🏓</button>
+        <button id="cleanButton" title="Clean" aria-label="Clean">🧼</button>
+        <button id="sleepButton" title="Sleep" aria-label="Sleep">💤</button>
       </div>
 
-      <button id="skipButton" class="debug">+2.5 min</button>
-      <button id="resetButton" class="danger">Reset pet</button>
-    </section>
-
-    <section id="pongPanel" class="pong hidden">
-      <h2>Pong</h2>
-      <canvas id="pongCanvas" width="220" height="140"></canvas>
-      <p id="pongStatus">Score 3 points to finish playing.</p>
-
-      <div class="button-row">
-        <button id="upButton">Up</button>
-        <button id="downButton">Down</button>
-      </div>
-
-      <button id="closePongButton">Close</button>
+      <button id="skipButton" class="debug" title="Skip 2.5 minutes" aria-label="Skip 2.5 minutes">⏩</button>
+      <button id="resetButton" class="danger" title="Reset pet" aria-label="Reset pet">🔄</button>
     </section>
   </main>
-
   <script src="game.js"></script>
   <script src="popup.js"></script>
 </body>
