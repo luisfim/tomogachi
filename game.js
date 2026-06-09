@@ -341,13 +341,18 @@
   function setName(state, newName, now = nowWithOffset(state)) {
     state = tick(state, now);
   
+    if (state.stage !== STAGES.EGG) {
+      state.message = `${state.name || "Tomogachi"} already knows who it is.`;
+      return state;
+    }
+  
     const cleanName = String(newName || "")
       .trim()
       .replace(/\s+/g, " ")
       .slice(0, 16);
   
     state.name = cleanName || "Tomogachi";
-    state.message = `${state.name} accepts this name.`;
+    state.message = `${state.name} accepts this name from inside the egg.`;
   
     return state;
   }
