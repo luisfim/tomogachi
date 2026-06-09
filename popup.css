@@ -165,3 +165,37 @@ canvas {
   background: #111827;
   border-color: #991b1b;
 }
+
+.name-box {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.name-box input {
+  flex: 1;
+  border: 2px solid #111827;
+  border-radius: 8px;
+  padding: 7px;
+  font-weight: bold;
+}
+
+.stats {
+  display: none;
+}
+
+button {
+  min-width: 42px;
+  min-height: 38px;
+  font-size: 18px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.pet {
+  font-size: 13px;
+  line-height: 1;
+  white-space: pre;
+}
