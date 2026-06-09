@@ -2,20 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Simple Tomagochi</title>
+  <title>Tomogachi</title>
   <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
-  <main class="container">
-    <h1>Simple Tomagochi</h1>
+  <main class="shell">
+    <header>
+      <h1>Tomogachi</h1>
+      <p id="stageText">Stage: Egg</p>
+    </header>
 
-    <pre id="pet" class="pet"></pre>
-    <p id="status">Loading...</p>
+    <section class="screen">
+      <pre id="pet" class="pet"></pre>
+      <p id="status">Loading...</p>
+      <p id="timerText">Timer loading...</p>
+      <p id="nextNeedText">Needs loading...</p>
+    </section>
 
-    <div class="stats">
+    <section class="stats">
       <label>
         Hunger
-        <progress id="hunger" value="50" max="100"></progress>
+        <progress id="hunger" value="0" max="100"></progress>
       </label>
 
       <label>
@@ -25,19 +32,48 @@
 
       <label>
         Energy
-        <progress id="energy" value="50" max="100"></progress>
+        <progress id="energy" value="70" max="100"></progress>
       </label>
-    </div>
 
-    <div class="buttons">
-      <button id="feedButton">Feed</button>
-      <button id="playButton">Play</button>
-      <button id="sleepButton">Sleep</button>
-    </div>
+      <label>
+        Cleanliness
+        <progress id="cleanliness" value="100" max="100"></progress>
+      </label>
+    </section>
 
-    <button id="resetButton" class="reset">Reset pet</button>
+    <section class="controls">
+      <button id="petEggButton">Pet Egg</button>
+
+      <div class="button-row">
+        <button id="saladButton">Salad</button>
+        <button id="friesButton">Fries</button>
+      </div>
+
+      <div class="button-row">
+        <button id="playButton">Play Pong</button>
+        <button id="cleanButton">Clean</button>
+        <button id="sleepButton">Sleep</button>
+      </div>
+
+      <button id="skipButton" class="debug">+2.5 min</button>
+      <button id="resetButton" class="danger">Reset pet</button>
+    </section>
+
+    <section id="pongPanel" class="pong hidden">
+      <h2>Pong</h2>
+      <canvas id="pongCanvas" width="220" height="140"></canvas>
+      <p id="pongStatus">Score 3 points to finish playing.</p>
+
+      <div class="button-row">
+        <button id="upButton">Up</button>
+        <button id="downButton">Down</button>
+      </div>
+
+      <button id="closePongButton">Close</button>
+    </section>
   </main>
 
+  <script src="game.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
