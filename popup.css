@@ -13,6 +13,99 @@ body {
   background-repeat: no-repeat;
 }
 
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.title-area h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.top-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.name-box {
+  display: flex;
+  gap: 6px;
+  margin: 8px 0 10px;
+}
+
+.name-box input {
+  flex: 1;
+  border: 2px solid #111827;
+  border-radius: 8px;
+  padding: 7px;
+  font-weight: bold;
+}
+
+.speech-box {
+  margin-top: 10px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 2px solid #111827;
+  border-radius: 14px;
+  min-height: 52px;
+}
+
+.speech-box p {
+  margin: 0;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.history-box {
+  margin-top: 14px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 2px solid #111827;
+  border-radius: 14px;
+}
+
+.history-box h2 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.history-box ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.history-box li {
+  font-size: 12px;
+  margin-bottom: 6px;
+  color: #374151;
+}
+
+.stats {
+  display: none;
+}
+
+.tiny {
+  min-width: 30px;
+  min-height: 30px;
+  padding: 4px 6px;
+  font-size: 14px;
+}
+
+.name-badge {
+  margin-top: 6px;
+  display: inline-block;
+  padding: 6px 10px;
+  border: 2px solid #111827;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  font-weight: bold;
+}
+
 .shell {
   padding: 14px;
   background: rgba(255, 255, 255, 0.72);
