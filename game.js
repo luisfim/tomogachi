@@ -76,6 +76,12 @@
       sleepEndsAt: null,
       energyBeforeSleep: null,
 
+      history: [],
+      lastOpenedAt: now,
+      lastMorningGreetingDate: null,
+      lastRareEventAt: 0,
+      soundEnabled: true,
+
       needs: {
         food: null,
         play: null,
@@ -103,6 +109,11 @@
     state.needs = { ...fresh.needs, ...(input && input.needs ? input.needs : {}) };
     state.nextNeedAt = { ...fresh.nextNeedAt, ...(input && input.nextNeedAt ? input.nextNeedAt : {}) };
 
+    if (!Array.isArray(state.history)) state.history = [];
+    if (!state.lastOpenedAt) state.lastOpenedAt = now;
+    if (!state.lastMorningGreetingDate) state.lastMorningGreetingDate = null;
+    if (typeof state.lastRareEventAt !== "number") state.lastRareEventAt = 0;
+    if (typeof state.soundEnabled !== "boolean") state.soundEnabled = true;
     if (!state.stage) state.stage = STAGES.EGG;
     if (!state.createdAt) state.createdAt = now;
     if (!state.stageStartedAt) state.stageStartedAt = now;
@@ -168,6 +179,82 @@
     }
   }
 
+  function formatClock(now) {
+    return new Date(now).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  }
+
+  function pushHistory(state, text, now) {
+    state.history = [
+      { text, time: formatClock(now) },
+      ...(state.history || [])
+    ].slice(0, 5);
+  }
+
+  function setMessage(state, text, now = nowWithOffset(state), addToHistory = true) {
+    state.message = text;
+  
+    if (addToHistory) {
+      pushHistory(state, text, now);
+    }
+  }
+
+  function noteOpened(state, now = nowWithOffset(state)) {
+    state = tick(state, now);
+  
+    const awayMs = state.lastOpenedAt ? now - state.lastOpenedAt : 0;
+    const currentDateKey = new Date(now).toDateString();
+    const currentHour = new Date(now).getHours();
+  
+    if (
+      currentHour < 12 &&
+      state.lastMorningGreetingDate !== currentDateKey &&
+      state.stage !== STAGES.DEAD
+    ) {
+      state.lastMorningGreetingDate = currentDateKey;
+      setMessage(state, "Good morning. I dreamed about browser cookies.", now);
+    } else if (awayMs >= 2 * 60 * MINUTE && state.stage !== STAGES.DEAD) {
+      setMessage(state, "I thought you had forgotten me.", now);
+    }
+  
+    state.lastOpenedAt = now;
+    return state;
+  }
+
+  function maybeRareEvent(state, now = nowWithOffset(state)) {
+    if (
+      state.stage === STAGES.EGG ||
+      state.stage === STAGES.DEAD ||
+      state.isSleeping
+    ) {
+      return state;
+    }
+  
+    if (now - state.lastRareEventAt < 30 * MINUTE) {
+      return state;
+    }
+  
+    const chance = Math.random();
+  
+    if (chance < 0.06) {
+      const events = [
+        `${state.name || "Tomogachi"} found a mysterious pixel crumb.`,
+        `${state.name || "Tomogachi"} sneezed with dramatic intensity.`,
+        `${state.name || "Tomogachi"} stared into the void for a full minute.`,
+        `${state.name || "Tomogachi"} invented a game you are not allowed to understand.`,
+        `${state.name || "Tomogachi"} hums a tiny song to itself.`
+      ];
+  
+      const chosen = events[Math.floor(Math.random() * events.length)];
+      state.lastRareEventAt = now;
+      setMessage(state, chosen, now);
+    }
+  
+    return state;
+  }
+
   function startSleep(state, now, minutes = 10 + Math.random() * 5) {
     state.isSleeping = true;
     state.sleepEndsAt = now + minutes * MINUTE;
@@ -199,6 +286,7 @@
     }
 
     if (now < state.lastTickAt) {
+      state = maybeRareEvent(state, now);
       state.lastTickAt = now;
       return state;
     }
@@ -305,6 +393,16 @@
     return state;
   }
 
+  function getAdultAgeLabel(state, now) {
+    if (state.stage !== STAGES.ADULT) return "Adult";
+  
+    const adultAge = now - state.stageStartedAt;
+  
+    if (adultAge < 30 * MINUTE) return "Young Adult";
+    if (adultAge < 90 * MINUTE) return "Adult";
+    return "Elder";
+  }
+
   function wakeUp(state, now = nowWithOffset(state)) {
     state = tick(state, now);
   
@@ -320,7 +418,7 @@
     }
   
     state.energyBeforeSleep = null;
-    state.message = `${state.name || "Tomogachi"} was woken up by the bell and looks betrayed.`;
+    state.message = (state, `${state.name || "Tomogachi"} was woken up by the bell and looks betrayed.`, now);
   
     scheduleNeed(state, "sleep", now);
   
@@ -333,7 +431,7 @@
     if (state.stage !== STAGES.EGG) return state;
 
     state.eggHatchAt = Math.max(now + 10 * SECOND, state.eggHatchAt - CONFIG.petEggBonusMs);
-    state.message = "The egg moved. Hatching got faster.";
+    state.message = (state, "The egg moved. Hatching got faster.", now);
 
     return tick(state, now);
   }
@@ -342,7 +440,7 @@
     state = tick(state, now);
   
     if (state.stage !== STAGES.EGG) {
-      state.message = `${state.name || "Tomogachi"} already knows who it is.`;
+      state.message = (state,`${state.name || "Tomogachi"} already knows who it is.`, now);
       return state;
     }
   
@@ -352,7 +450,7 @@
       .slice(0, 16);
   
     state.name = cleanName || "Tomogachi";
-    state.message = `${state.name} accepts this name from inside the egg.`;
+    state.message = (state,`${state.name} accepts this name from inside the egg.`, now);
   
     return state;
   }
@@ -368,14 +466,13 @@
       state.stats.hunger = clamp(state.stats.hunger - 45);
       state.stats.happiness = clamp(state.stats.happiness + 12);
       state.unhealthyDebt = clamp(state.unhealthyDebt + 25);
-      state.message = "Tomogachi loved the fries, but it was not very healthy.";
+      setMessage(state, "This is the greatest day of my short digital life.", now);
     } else {
       state.stats.hunger = clamp(state.stats.hunger - 25);
       state.health = clamp(state.health + 5);
       state.unhealthyDebt = clamp(state.unhealthyDebt - 15);
-      state.message = "Tomogachi ate salad and feels healthier.";
+      setMessage(state, `${state.name || "Tomogachi"} ate salad and feels weirdly responsible.`, now);
     }
-
     scheduleNeed(state, "food", now);
     return state;
   }
@@ -390,7 +487,7 @@
     state.stats.happiness = clamp(state.stats.happiness + 22);
     state.stats.energy = clamp(state.stats.energy - 12);
     state.stats.hunger = clamp(state.stats.hunger + 8);
-    state.message = "Tomogachi had fun playing Pong.";
+    state.message = (state, "Tomogachi had fun playing Pong.", now);
 
     scheduleNeed(state, "play", now);
     return state;
@@ -405,7 +502,7 @@
 
     state.stats.cleanliness = 100;
     state.health = clamp(state.health + 3);
-    state.message = "Tomogachi is clean now.";
+    state.message = (state, "Tomogachi is clean now.", now);
 
     scheduleNeed(state, "clean", now);
     return state;
@@ -558,7 +655,24 @@
 
   function getStatusText(state) {
     const name = state.name || "Tomogachi";
+
+      if (state.message) return state.message;
+
+    if (state.stage === STAGES.DEAD) {
+      return `${state.name || "Tomogachi"} has left this tiny world.`;
+    }
   
+    if (state.stage === STAGES.EGG) {
+      return "The egg is quiet, but something inside is listening.";
+    }
+  
+    if (state.isSleeping) {
+      return `${state.name || "Tomogachi"} is asleep and probably judging you in a dream.`;
+    }
+  
+    return `${state.name || "Tomogachi"} is vibing quietly.`;
+  }
+    
     if (state.stage === STAGES.DEAD) {
       return `${name} has left this tiny world.`;
     }
@@ -621,8 +735,14 @@
     return state.message || neutralMessages[Math.floor(Math.random() * neutralMessages.length)];
   }
 
-  function getDisplay(state, now = nowWithOffset(state)) {
-    state = sanitizeState(state, now);
+  function getDisplay(state, now = nowWithOffset(state), lookDirection = "center") {
+    stageLabel:
+      state.stage === STAGES.ADULT
+        ? getAdultAgeLabel(state, now)
+        : state.stage.charAt(0).toUpperCase() + state.stage.slice(1),
+      history: [...state.history],
+      soundEnabled: state.soundEnabled,
+  }
 
     return {
       name: state.name,
