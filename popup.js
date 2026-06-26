@@ -174,11 +174,20 @@ async function resetPet() {
   render();
 }
 
-function startPong() {
+async function startPong() {
   if (!state || state.stage === Game.STAGES.EGG || state.stage === Game.STAGES.DEAD || state.isSleeping) {
     return;
   }
+  const playAttempt = Game.attemptPlay(state, Game.nowWithOffset(state));
 
+  state = playAttempt.state;
+    
+  await saveState();
+  render();
+    
+  if (!playAttempt.accepted) {
+    return;
+  }
   if (pong) {
     return;
   }
