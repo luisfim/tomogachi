@@ -13,6 +13,33 @@ body {
   background-repeat: no-repeat;
 }
 
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.topbar h1 {
+  margin-bottom: 4px;
+}
+
+.topbar p {
+  margin-top: 0;
+}
+
+.tiny {
+  min-width: 28px;
+  min-height: 28px;
+  padding: 3px 6px;
+  font-size: 13px;
+  border-radius: 7px;
+}
+
+.danger {
+  background: #991b1b;
+}
+
 .shell {
   padding: 14px;
   background: rgba(255, 255, 255, 0.72);

@@ -174,11 +174,20 @@ async function resetPet() {
   render();
 }
 
-function startPong() {
+async function startPong() {
   if (!state || state.stage === Game.STAGES.EGG || state.stage === Game.STAGES.DEAD || state.isSleeping) {
     return;
   }
+  const playAttempt = Game.attemptPlay(state, Game.nowWithOffset(state));
 
+  state = playAttempt.state;
+    
+  await saveState();
+  render();
+    
+  if (!playAttempt.accepted) {
+    return;
+  }
   if (pong) {
     return;
   }
@@ -379,7 +388,15 @@ skipButton.addEventListener("click", () => {
   changeState((currentState, now) => Game.skipTestTime(currentState, now));
 });
 
-resetButton.addEventListener("click", resetPet);
+resetButton.addEventListener("click", () => {
+  const confirmed = confirm(
+    "Are you sure you want to reset your Tomogachi? This cannot be undone."
+  );
+
+  if (confirmed) {
+    resetPet();
+  }
+});
 closePongButton.addEventListener("click", closePong);
 
 bindHoldButton(upButton, "up");
