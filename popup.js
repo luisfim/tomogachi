@@ -388,7 +388,15 @@ skipButton.addEventListener("click", () => {
   changeState((currentState, now) => Game.skipTestTime(currentState, now));
 });
 
-resetButton.addEventListener("click", resetPet);
+resetButton.addEventListener("click", () => {
+  const confirmed = confirm(
+    "Are you sure you want to reset your Tomogachi? This cannot be undone."
+  );
+
+  if (confirmed) {
+    resetPet();
+  }
+});
 closePongButton.addEventListener("click", closePong);
 
 bindHoldButton(upButton, "up");
