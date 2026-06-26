@@ -19,6 +19,7 @@
     babyDurationMs: 2 * 60 * MINUTE,
     neglectGraceMs: 5 * MINUTE,
     testSkipMs: 2.5 * MINUTE,
+    foodRefusalCooldownMs: 5 * MINUTE,
 
     baby: {
       food: [10, 15],
@@ -76,6 +77,14 @@
       sleepEndsAt: null,
       energyBeforeSleep: null,
 
+      resistance: {
+        lastCareAction: null,
+        consecutiveFoodOffers: 0,
+        cleanAttempts: 0,
+        playRefusals: 0,
+        lastFoodRefusalAt: null
+      },
+      
       needs: {
         food: null,
         play: null,
@@ -112,6 +121,31 @@
     if (typeof state.health !== "number") state.health = 100;
     if (typeof state.unhealthyDebt !== "number") state.unhealthyDebt = 0;
 
+    if (!state.resistance) {
+      state.resistance = { ...fresh.resistance };
+    } else {
+      state.resistance = { ...fresh.resistance, ...state.resistance };
+    }
+
+    if (typeof state.resistance.consecutiveFoodOffers !== "number") {
+      state.resistance.consecutiveFoodOffers = 0;
+    }
+
+    if (typeof state.resistance.cleanAttempts !== "number") {
+      state.resistance.cleanAttempts = 0;
+    }
+
+    if (typeof state.resistance.playRefusals !== "number") {
+      state.resistance.playRefusals = 0;
+    }
+
+    if (
+      typeof state.resistance.lastFoodRefusalAt !== "number" &&
+      state.resistance.lastFoodRefusalAt !== null
+    ) {
+      state.resistance.lastFoodRefusalAt = null;
+    }
+
     for (const key of Object.keys(state.stats)) {
       state.stats[key] = clamp(Number(state.stats[key]) || 0);
     }
@@ -120,6 +154,40 @@
     state.unhealthyDebt = clamp(state.unhealthyDebt);
 
     return state;
+  }
+
+  function setMessage(state, text) {
+    state.message = text;
+  }
+
+  function markCareAction(state, actionName) {
+    if (!state.resistance) {
+      state.resistance = {
+        lastCareAction: null,
+        consecutiveFoodOffers: 0,
+        cleanAttempts: 0,
+        playRefusals: 0,
+        lastFoodRefusalAt: null
+      };
+    }
+
+    if (actionName === "food") {
+      if (state.resistance.lastCareAction === "food") {
+        state.resistance.consecutiveFoodOffers += 1;
+      } else {
+        state.resistance.consecutiveFoodOffers = 1;
+      }
+    } else {
+      state.resistance.consecutiveFoodOffers = 0;
+    }
+
+    state.resistance.lastCareAction = actionName;
+  }
+
+  function resetCleanResistance(state) {
+    if (state.resistance) {
+      state.resistance.cleanAttempts = 0;
+    }
   }
 
   function scheduleNeed(state, need, now) {
@@ -364,20 +432,86 @@
       return state;
     }
 
+    if (
+      state.resistance.lastFoodRefusalAt &&
+      now - state.resistance.lastFoodRefusalAt < CONFIG.foodRefusalCooldownMs
+    ) {
+      setMessage(
+        state,
+        `${state.name || "Tomogachi"} is still offended by the previous food offer.`
+      );
+
+      return state;
+    }
+
+    markCareAction(state, "food");
+
+    if (state.resistance.consecutiveFoodOffers >= 2) {
+      state.resistance.consecutiveFoodOffers = 0;
+      state.resistance.lastFoodRefusalAt = now;
+
+      setMessage(
+        state,
+        `${state.name || "Tomogachi"} turns away. Two meals in a row is apparently offensive.`
+      );
+
+      return state;
+    }
+
     if (foodType === "fries") {
       state.stats.hunger = clamp(state.stats.hunger - 45);
       state.stats.happiness = clamp(state.stats.happiness + 12);
       state.unhealthyDebt = clamp(state.unhealthyDebt + 25);
-      state.message = "Tomogachi loved the fries, but it was not very healthy.";
+      setMessage(state, "This is the greatest day of my short digital life.");
     } else {
       state.stats.hunger = clamp(state.stats.hunger - 25);
       state.health = clamp(state.health + 5);
       state.unhealthyDebt = clamp(state.unhealthyDebt - 15);
-      state.message = "Tomogachi ate salad and feels healthier.";
+      setMessage(state, `${state.name || "Tomogachi"} ate salad and feels weirdly responsible.`);
     }
 
     scheduleNeed(state, "food", now);
     return state;
+  }
+
+
+
+  function attemptPlay(state, now = nowWithOffset(state)) {
+    state = tick(state, now);
+
+    if (state.stage === STAGES.EGG || state.stage === STAGES.DEAD || state.isSleeping) {
+      return { state, accepted: false };
+    }
+
+    const wantsToPlay = Boolean(state.needs.play);
+    const alreadyHappy = state.stats.happiness >= 70;
+    const tooTired = state.stats.energy <= 25;
+
+    if (!wantsToPlay && (alreadyHappy || tooTired)) {
+      state.resistance.playRefusals += 1;
+      markCareAction(state, "refused-play");
+
+      const messages = [
+        `${state.name || "Tomogachi"} looks at the paddle and simply says no.`,
+        `${state.name || "Tomogachi"} does not feel like playing right now.`,
+        `${state.name || "Tomogachi"} has emotionally retired from Pong for the moment.`,
+        `${state.name || "Tomogachi"} refuses. The vibes are not correct.`
+      ];
+
+      setMessage(
+        state,
+        messages[state.resistance.playRefusals % messages.length]
+      );
+
+      return { state, accepted: false };
+    }
+
+    markCareAction(state, "play");
+    state.resistance.playRefusals = 0;
+
+    setMessage(state, `${state.name || "Tomogachi"} agrees to play Pong.`);
+
+    return { state, accepted: true };
   }
 
   function finishPlay(state, now = nowWithOffset(state)) {
@@ -390,11 +524,16 @@
     state.stats.happiness = clamp(state.stats.happiness + 22);
     state.stats.energy = clamp(state.stats.energy - 12);
     state.stats.hunger = clamp(state.stats.hunger + 8);
-    state.message = "Tomogachi had fun playing Pong.";
+
+    setMessage(
+      state,
+      `${state.name || "Tomogachi"} had fun playing Pong.`
+    );
 
     scheduleNeed(state, "play", now);
     return state;
   }
+
 
   function clean(state, now = nowWithOffset(state)) {
     state = tick(state, now);
@@ -403,13 +542,45 @@
       return state;
     }
 
+    const isDirty = Boolean(state.needs.clean) || state.stats.cleanliness <= 45;
+
+    markCareAction(state, "clean");
+
+    if (!isDirty) {
+      resetCleanResistance(state);
+
+      setMessage(
+        state,
+        `${state.name || "Tomogachi"} is already clean and deeply suspicious of this bath.`
+      );
+
+      return state;
+    }
+
+    state.resistance.cleanAttempts += 1;
+
+    if (state.resistance.cleanAttempts < 2) {
+      setMessage(
+        state,
+        `${state.name || "Tomogachi"} dodges the bath. You may need to insist.`
+      );
+
+      return state;
+    }
+
     state.stats.cleanliness = 100;
     state.health = clamp(state.health + 3);
-    state.message = "Tomogachi is clean now.";
+    resetCleanResistance(state);
+
+    setMessage(
+      state,
+      `${state.name || "Tomogachi"} has been forcibly cleaned and is pretending not to enjoy it.`
+    );
 
     scheduleNeed(state, "clean", now);
     return state;
   }
+
 
   function sleep(state, now = nowWithOffset(state)) {
     state = tick(state, now);
@@ -418,9 +589,24 @@
       return state;
     }
 
+    markCareAction(state, "sleep");
+
+    const isSleepy = Boolean(state.needs.sleep) || state.stats.energy <= 40;
+
+    if (!isSleepy) {
+      setMessage(
+        state,
+        `${state.name || "Tomogachi"} lies down, immediately gets up, and decides sleep was a bad idea.`
+      );
+
+      scheduleNeed(state, "sleep", now);
+      return state;
+    }
+
     startSleep(state, now, 10);
     return state;
   }
+
 
   function skipTestTime(state, now = nowWithOffset(state)) {
     state = sanitizeState(state, now);
@@ -656,6 +842,7 @@
     petEgg,
     feed,
     wakeUp,
+    attemptPlay,
     finishPlay,
     clean,
     sleep,
