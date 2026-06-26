@@ -19,8 +19,8 @@
     <section class="screen">
       <pre id="pet" class="pet"></pre>
       <p id="status">Loading...</p>
-      <p id="timerText">Timer loading...</p>
-      <p id="nextNeedText">Needs loading...</p>
+      <p id="timerText" hidden>Timer loading...</p>
+      <p id="nextNeedText" hidden>Needs loading...</p>
     </section>
 
     <section class="stats">
@@ -59,7 +59,7 @@
         <button id="wakeButton" title="Wake up" aria-label="Wake up">🔔</button>
       </div>
 
-      <button id="skipButton" class="debug" title="Skip 2.5 minutes" aria-label="Skip 2.5 minutes">⏩</button>
+      <button id="skipButton" class="debug" title="Skip 2.5 minutes" aria-label="Skip 2.5 minutes" hidden>⏩</button>
       <button id="resetButton" class="danger" title="Reset pet" aria-label="Reset pet">🔄</button>
     </section>
     <section id="pongPanel" class="pong hidden">
