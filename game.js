@@ -665,7 +665,7 @@
     if (state.stage === STAGES.DEAD) return "x⠀⠀.⠀⠀x";
     if (state.stage === STAGES.EGG) return "0⠀⠀⠐⠀⠀0";
     if (state.isSleeping) return "_⠀⠀.⠀⠀_";
-    if (state.health <= 25) return "e⠀⠀.⠀⠀e";
+    if (state.health <= 25) return ">⠀⠀.⠀⠀<";
     if (state.needs.clean) return "o⠀...⠀o";
     if (state.needs.food) return "⠂⠀⠀o⠀⠀⠂";
     if (state.needs.play) return "⠈⠀⠀u⠀⠀⠈";
