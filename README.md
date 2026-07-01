@@ -8,7 +8,7 @@
 
 ## How to add to you chromium based web browser:
 
-[Chrome Web Store link]([https://www.google.com](https://chromewebstore.google.com/detail/tomogachi/jlnbolmllmgflbhambgcoepphfcehpjn))
+[Chrome Web Store link](https://chromewebstore.google.com/detail/tomogachi/jlnbolmllmgflbhambgcoepphfcehpjn)
 
 ## How to Run Locally
 I am not sure why anyone would want this, but here it is:
