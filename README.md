@@ -6,11 +6,9 @@
 ## Screenshot
 <img src="./screenshot.jpeg" alt="Tomogachi screenshot" width="200">
 
-## Chrome Web Store
+## How to add to you chromium based web browser:
 
-<!-- Add the Chrome Web Store link here when published -->
-
-Chrome Web Store link: **Coming soon**
+[Chrome Web Store link]([https://www.google.com](https://chromewebstore.google.com/detail/tomogachi/jlnbolmllmgflbhambgcoepphfcehpjn))
 
 ## How to Run Locally
 I am not sure why anyone would want this, but here it is:
