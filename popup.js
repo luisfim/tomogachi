@@ -38,6 +38,7 @@ let state;
 let pong = null;
 let pongAnimationId = null;
 let isPlayingPong = false;
+let isEndingPong = false;
 
 const controls = {
   up: false,
@@ -241,18 +242,19 @@ async function startPong() {
 }
 
 function closePong() {
-  pongPanel.classList.add("hidden");
-
-  pong = null;
-  isPlayingPong = false;
-
-  controls.up = false;
-  controls.down = false;
-
   if (pongAnimationId) {
     cancelAnimationFrame(pongAnimationId);
     pongAnimationId = null;
   }
+
+  pongPanel.classList.add("hidden");
+
+  pong = null;
+  isPlayingPong = false;
+  isEndingPong = false;
+
+  controls.up = false;
+  controls.down = false;
 
   render();
 }
@@ -268,12 +270,35 @@ function resetBall(direction = 1) {
   pong.ballVY = Math.random() > 0.5 ? difficulty.ballVY : -difficulty.ballVY;
 }
 
-async function finishPong() {
-  closePong();
+async function finishPong(playerWon) {
+  if (isEndingPong) {
+    return;
+  }
 
-  await changeState((currentState, now) => {
-    return Game.finishPlay(currentState, now);
-  });
+  isEndingPong = true;
+
+  if (pongAnimationId) {
+    cancelAnimationFrame(pongAnimationId);
+    pongAnimationId = null;
+  }
+
+  pongPanel.classList.add("hidden");
+
+  pong = null;
+  isPlayingPong = false;
+
+  controls.up = false;
+  controls.down = false;
+
+  if (playerWon) {
+    const now = Game.nowWithOffset(state);
+    state = Game.finishPlay(state, now);
+    await saveState();
+  }
+
+  isEndingPong = false;
+
+  render();
 }
 
 function animatePong() {
@@ -354,18 +379,27 @@ function animatePong() {
 
   if (pong.score >= 3) {
     pongStatus.textContent = "You won! Tomogachi had fun.";
-    finishPong();
+  
+    finishPong(true).catch((error) => {
+      console.error("Failed to finish Pong:", error);
+      closePong();
+    });
+  
     return;
   }
-
+  
   if (pong.enemyScore >= 3) {
-    pongStatus.textContent = "Tomogachi won this round.";
-    closePong();
-    return;
+      pongStatus.textContent = "Tomogachi won this round.";
+  
+      finishPong(false).catch((error) => {
+        console.error("Failed to close Pong:", error);
+        closePong();
+      });
+  
+      return;
   }
 
-  pongAnimationId = requestAnimationFrame(animatePong);
-}
+pongAnimationId = requestAnimationFrame(animatePong);
 
 function bindHoldButton(button, key) {
   button.addEventListener("pointerdown", () => {
