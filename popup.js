@@ -122,7 +122,7 @@ function render() {
 
   if (document.activeElement !== nameInput) {
     nameInput.value = display.name || "";
-}
+  }
 
   document.body.classList.toggle("sleep-mode", display.isSleeping);
   document.body.classList.toggle("dead-mode", display.isDead);
@@ -144,13 +144,14 @@ function render() {
   const blocked = isEgg || isDead || isSleeping;
 
   petEggButton.classList.toggle("hidden", !isEgg || isDead);
-  
+
   saladButton.classList.toggle("hidden", blocked);
   friesButton.classList.toggle("hidden", blocked);
   playButton.classList.toggle("hidden", blocked);
   cleanButton.classList.toggle("hidden", blocked);
   sleepButton.classList.toggle("hidden", blocked);
   wakeButton.classList.toggle("hidden", !isSleeping || isDead);
+
   nameBox.classList.toggle("hidden", !isEgg || isDead);
 }
 
@@ -166,8 +167,8 @@ async function tickAndSave() {
   }
 
   if (!isPlayingPong) {
-  render();
-}
+    render();
+  }
 }
 
 async function resetPet() {
@@ -224,42 +225,8 @@ async function startPong() {
     targetScore: difficulty.targetScore,
     speedGain: difficulty.speedGain,
 
-    ballX: 110,
-    ballY: 70,
-    ballVX: difficulty.ballVX,
-    ballVY: difficulty.ballVY,
-    ballSize: 6,
-
-    score: 0,
-    enemyScore: 0
-  };
-
-  pongStatus.textContent = `${difficulty.label}: score ${pong.targetScore} points to finish playing.`;
-
-  animatePong();
-}
-
-  pongPanel.classList.remove("hidden");
-
-  const difficulty = getPongDifficulty();
-
-  pong = {
-    width: pongCanvas.width,
-    height: pongCanvas.height,
-
-    playerY: 50,
-    enemyY: 50,
-
-    paddleW: 8,
-    playerPaddleH: difficulty.playerPaddleH,
-    enemyPaddleH: difficulty.enemyPaddleH,
-
-    enemySpeed: difficulty.enemySpeed,
-    targetScore: difficulty.targetScore,
-    speedGain: difficulty.speedGain,
-
-    ballX: 110,
-    ballY: 70,
+    ballX: pongCanvas.width / 2,
+    ballY: pongCanvas.height / 2,
     ballVX: difficulty.ballVX,
     ballVY: difficulty.ballVY,
     ballSize: 6,
@@ -291,6 +258,8 @@ function closePong() {
 }
 
 function resetBall(direction = 1) {
+  if (!pong) return;
+
   const difficulty = getPongDifficulty();
 
   pong.ballX = pong.width / 2;
@@ -315,14 +284,20 @@ function animatePong() {
   if (controls.up) pong.playerY -= 4;
   if (controls.down) pong.playerY += 4;
 
-  pong.playerY = Math.max(0, Math.min(pong.height - pong.playerPaddleH, pong.playerY));
-  
+  pong.playerY = Math.max(
+    0,
+    Math.min(pong.height - pong.playerPaddleH, pong.playerY)
+  );
+
   const enemyCenter = pong.enemyY + pong.enemyPaddleH / 2;
-  
+
   if (enemyCenter < pong.ballY - 8) pong.enemyY += pong.enemySpeed;
   if (enemyCenter > pong.ballY + 8) pong.enemyY -= pong.enemySpeed;
-  
-  pong.enemyY = Math.max(0, Math.min(pong.height - pong.enemyPaddleH, pong.enemyY));
+
+  pong.enemyY = Math.max(
+    0,
+    Math.min(pong.height - pong.enemyPaddleH, pong.enemyY)
+  );
 
   pong.ballX += pong.ballVX;
   pong.ballY += pong.ballVY;
@@ -337,19 +312,19 @@ function animatePong() {
     pong.ballX >= 10 &&
     pong.ballY + pong.ballSize >= pong.playerY &&
     pong.ballY <= pong.playerY + pong.playerPaddleH;
-  
+
   const hitsEnemy =
     pong.ballVX > 0 &&
     pong.ballX + pong.ballSize >= pong.width - 18 &&
     pong.ballX <= pong.width - 10 &&
     pong.ballY + pong.ballSize >= pong.enemyY &&
     pong.ballY <= pong.enemyY + pong.enemyPaddleH;
-  
+
   if (hitsPlayer) {
     pong.ballVX = Math.abs(pong.ballVX) + pong.speedGain;
     pong.ballX = 19;
   }
-  
+
   if (hitsEnemy) {
     pong.ballVX = -Math.abs(pong.ballVX) - pong.speedGain;
     pong.ballX = pong.width - 25;
@@ -357,29 +332,32 @@ function animatePong() {
 
   if (pong.ballX > pong.width) {
     pong.score += 1;
-    pongStatus.textContent = `Score: ${pong.score} / ${pong.targetScore}`;
+    pongStatus.textContent = `Score: ${pong.score} / 3`;
     resetBall(-1);
   }
 
   if (pong.ballX < -pong.ballSize) {
     pong.enemyScore += 1;
-    pongStatus.textContent = `Score: ${pong.score} / 3`;
+    pongStatus.textContent = `Tomogachi: ${pong.enemyScore} / 3`;
     resetBall(1);
   }
 
   ctx.clearRect(0, 0, pong.width, pong.height);
+
   ctx.fillRect(10, pong.playerY, pong.paddleW, pong.playerPaddleH);
   ctx.fillRect(pong.width - 18, pong.enemyY, pong.paddleW, pong.enemyPaddleH);
   ctx.fillRect(pong.ballX, pong.ballY, pong.ballSize, pong.ballSize);
+
   ctx.font = "12px monospace";
-  ctx.fillText(`${pong.score} / 3`, 92, 14);
+  ctx.fillText(`You ${pong.score} / 3`, 72, 14);
+  ctx.fillText(`Pet ${pong.enemyScore} / 3`, 72, 28);
 
   if (pong.score >= 3) {
     pongStatus.textContent = "You won! Tomogachi had fun.";
     finishPong();
     return;
   }
-  
+
   if (pong.enemyScore >= 3) {
     pongStatus.textContent = "Tomogachi won this round.";
     closePong();
@@ -462,6 +440,7 @@ resetButton.addEventListener("click", () => {
     resetPet();
   }
 });
+
 closePongButton.addEventListener("click", closePong);
 
 bindHoldButton(upButton, "up");
