@@ -37,6 +37,7 @@ const saveNameButton = document.getElementById("saveNameButton");
 let state;
 let pong = null;
 let pongAnimationId = null;
+let isPlayingPong = false;
 
 const controls = {
   up: false,
@@ -47,10 +48,10 @@ function getPongDifficulty() {
   if (state.stage === Game.STAGES.BABY) {
     return {
       label: "Baby mode",
-      targetScore: 2,
+      targetScore: 3,
       playerPaddleH: 52,
       enemyPaddleH: 26,
-      enemySpeed: 1.2,
+      enemySpeed: 0.5,
       ballVX: 1.7,
       ballVY: 1.1,
       speedGain: 0.03
@@ -60,7 +61,7 @@ function getPongDifficulty() {
   if (state.stage === Game.STAGES.ADULT) {
     return {
       label: "Adult mode",
-      targetScore: 4,
+      targetScore: 3,
       playerPaddleH: 34,
       enemyPaddleH: 34,
       enemySpeed: 2.4,
@@ -164,7 +165,9 @@ async function tickAndSave() {
     await saveState();
   }
 
+  if (!isPlayingPong) {
   render();
+}
 }
 
 async function resetPet() {
@@ -175,23 +178,33 @@ async function resetPet() {
 }
 
 async function startPong() {
-  if (!state || state.stage === Game.STAGES.EGG || state.stage === Game.STAGES.DEAD || state.isSleeping) {
-    return;
-  }
-  const playAttempt = Game.attemptPlay(state, Game.nowWithOffset(state));
-
-  state = playAttempt.state;
-    
-  await saveState();
-  render();
-    
-  if (!playAttempt.accepted) {
-    return;
-  }
-  if (pong) {
+  if (
+    !state ||
+    state.stage === Game.STAGES.EGG ||
+    state.stage === Game.STAGES.DEAD ||
+    state.isSleeping
+  ) {
     return;
   }
 
+  if (pong || isPlayingPong) {
+    return;
+  }
+
+  if (typeof Game.attemptPlay === "function") {
+    const playAttempt = Game.attemptPlay(state, Game.nowWithOffset(state));
+
+    state = playAttempt.state;
+
+    await saveState();
+    render();
+
+    if (!playAttempt.accepted) {
+      return;
+    }
+  }
+
+  isPlayingPong = true;
   pongPanel.classList.remove("hidden");
 
   const difficulty = getPongDifficulty();
@@ -226,14 +239,55 @@ async function startPong() {
   animatePong();
 }
 
+  pongPanel.classList.remove("hidden");
+
+  const difficulty = getPongDifficulty();
+
+  pong = {
+    width: pongCanvas.width,
+    height: pongCanvas.height,
+
+    playerY: 50,
+    enemyY: 50,
+
+    paddleW: 8,
+    playerPaddleH: difficulty.playerPaddleH,
+    enemyPaddleH: difficulty.enemyPaddleH,
+
+    enemySpeed: difficulty.enemySpeed,
+    targetScore: difficulty.targetScore,
+    speedGain: difficulty.speedGain,
+
+    ballX: 110,
+    ballY: 70,
+    ballVX: difficulty.ballVX,
+    ballVY: difficulty.ballVY,
+    ballSize: 6,
+
+    score: 0,
+    enemyScore: 0
+  };
+
+  pongStatus.textContent = `${difficulty.label}: first to 3 points wins.`;
+
+  animatePong();
+}
+
 function closePong() {
   pongPanel.classList.add("hidden");
+
   pong = null;
+  isPlayingPong = false;
+
+  controls.up = false;
+  controls.down = false;
 
   if (pongAnimationId) {
     cancelAnimationFrame(pongAnimationId);
     pongAnimationId = null;
   }
+
+  render();
 }
 
 function resetBall(direction = 1) {
@@ -309,7 +363,7 @@ function animatePong() {
 
   if (pong.ballX < -pong.ballSize) {
     pong.enemyScore += 1;
-    pongStatus.textContent = `Missed. Score: ${pong.score} / 3`;
+    pongStatus.textContent = `Score: ${pong.score} / 3`;
     resetBall(1);
   }
 
@@ -318,10 +372,17 @@ function animatePong() {
   ctx.fillRect(pong.width - 18, pong.enemyY, pong.paddleW, pong.enemyPaddleH);
   ctx.fillRect(pong.ballX, pong.ballY, pong.ballSize, pong.ballSize);
   ctx.font = "12px monospace";
-  ctx.fillText(`${pong.score} / ${pong.targetScore}`, 92, 14);
+  ctx.fillText(`${pong.score} / 3`, 92, 14);
 
-  if (pong.score >= pong.targetScore) {
+  if (pong.score >= 3) {
+    pongStatus.textContent = "You won! Tomogachi had fun.";
     finishPong();
+    return;
+  }
+  
+  if (pong.enemyScore >= 3) {
+    pongStatus.textContent = "Tomogachi won this round.";
+    closePong();
     return;
   }
 
@@ -358,7 +419,11 @@ friesButton.addEventListener("click", () => {
   changeState((currentState, now) => Game.feed(currentState, "fries", now));
 });
 
-playButton.addEventListener("click", startPong);
+playButton.addEventListener("click", () => {
+  startPong().catch((error) => {
+    console.error("Pong failed to start:", error);
+  });
+});
 
 cleanButton.addEventListener("click", () => {
   changeState((currentState, now) => Game.clean(currentState, now));
@@ -404,5 +469,10 @@ bindHoldButton(downButton, "down");
 
 loadState();
 
-setInterval(render, 1000);
+setInterval(() => {
+  if (!isPlayingPong) {
+    render();
+  }
+}, 1000);
+
 setInterval(tickAndSave, 5000);
