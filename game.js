@@ -88,7 +88,7 @@
       accessories: {
         bow: false
       },
-      
+
       needs: {
         food: null,
         play: null,
@@ -115,10 +115,7 @@
     state.stats = { ...fresh.stats, ...(input && input.stats ? input.stats : {}) };
     state.needs = { ...fresh.needs, ...(input && input.needs ? input.needs : {}) };
     state.nextNeedAt = { ...fresh.nextNeedAt, ...(input && input.nextNeedAt ? input.nextNeedAt : {}) };
-    state.accessories = {
-      ...fresh.accessories,
-      ...(input && input.accessories ? input.accessories : {})
-    };
+    state.accessories = { ...fresh.accessories, ...(input && input.accessories ? input.accessories : {}) };
 
     if (!state.stage) state.stage = STAGES.EGG;
     if (!state.createdAt) state.createdAt = now;
@@ -128,6 +125,7 @@
     if (typeof state.timeOffsetMs !== "number") state.timeOffsetMs = 0;
     if (typeof state.health !== "number") state.health = 100;
     if (typeof state.unhealthyDebt !== "number") state.unhealthyDebt = 0;
+    if (typeof state.message !== "string") state.message = "";
 
     if (!state.resistance) {
       state.resistance = { ...fresh.resistance };
@@ -165,7 +163,7 @@
   }
 
   function setMessage(state, text) {
-    state.message = text;
+    state.message = String(text || "");
   }
 
   function markCareAction(state, actionName) {
@@ -219,6 +217,7 @@
     state.lastTickAt = now;
     state.isSleeping = false;
     state.sleepEndsAt = null;
+    state.energyBeforeSleep = null;
 
     for (const need of NEEDS) {
       state.needs[need] = null;
@@ -230,7 +229,7 @@
       state.stats.happiness = 60;
       state.stats.energy = 80;
       state.stats.cleanliness = 100;
-      state.message = "It hatched into a baby Tomogachi.";
+      setMessage(state, "It hatched into a baby Tomogachi.");
       scheduleAllNeeds(state, now);
     }
 
@@ -239,7 +238,7 @@
       state.stats.happiness = clamp(state.stats.happiness + 15);
       state.stats.energy = clamp(state.stats.energy + 15);
       state.stats.cleanliness = clamp(state.stats.cleanliness + 20);
-      state.message = "Your Tomogachi evolved into an adult.";
+      setMessage(state, "Your Tomogachi evolved into an adult.");
       scheduleAllNeeds(state, now);
     }
   }
@@ -250,7 +249,7 @@
     state.energyBeforeSleep = state.stats.energy;
     state.needs.sleep = null;
     state.nextNeedAt.sleep = null;
-    state.message = `${state.name || "Tomogachi"} curled up and fell asleep.`;
+    setMessage(state, `${state.name || "Tomogachi"} curled up and fell asleep.`);
   }
 
   function killPet(state, now) {
@@ -259,7 +258,7 @@
     state.isSleeping = false;
     state.sleepEndsAt = null;
     state.health = 0;
-    state.message = "Your Tomogachi got too sick and departed.";
+    setMessage(state, "Your Tomogachi got too sick and departed.");
 
     for (const need of NEEDS) {
       state.needs[need] = null;
@@ -300,14 +299,14 @@
     if (state.isSleeping) {
       state.stats.energy = clamp(state.stats.energy + elapsedMinutes * 8);
 
-    if (now >= state.sleepEndsAt) {
-      state.isSleeping = false;
-      state.sleepEndsAt = null;
-      state.energyBeforeSleep = null;
-      state.stats.energy = 100;
-      state.message = `${state.name || "Tomogachi"} woke up fully rested.`;
-      scheduleNeed(state, "sleep", now);
-    }
+      if (now >= state.sleepEndsAt) {
+        state.isSleeping = false;
+        state.sleepEndsAt = null;
+        state.energyBeforeSleep = null;
+        state.stats.energy = 100;
+        setMessage(state, `${state.name || "Tomogachi"} woke up fully rested.`);
+        scheduleNeed(state, "sleep", now);
+      }
     } else {
       state.stats.energy = clamp(state.stats.energy - elapsedMinutes * 0.3);
     }
@@ -374,7 +373,7 @@
     }
 
     if (state.health <= 25) {
-      state.message = "Your Tomogachi is sick. Take better care of it.";
+      setMessage(state, "Your Tomogachi is sick. Take better care of it.");
     }
 
     state.lastTickAt = now;
@@ -383,23 +382,23 @@
 
   function wakeUp(state, now = nowWithOffset(state)) {
     state = tick(state, now);
-  
+
     if (state.stage === STAGES.DEAD || !state.isSleeping) {
       return state;
     }
-  
+
     state.isSleeping = false;
     state.sleepEndsAt = null;
-  
+
     if (typeof state.energyBeforeSleep === "number") {
       state.stats.energy = state.energyBeforeSleep;
     }
-  
+
     state.energyBeforeSleep = null;
-    state.message = `${state.name || "Tomogachi"} was woken up by the bell and looks betrayed.`;
-  
+    setMessage(state, `${state.name || "Tomogachi"} was woken up by the bell and looks betrayed.`);
+
     scheduleNeed(state, "sleep", now);
-  
+
     return state;
   }
 
@@ -409,41 +408,46 @@
     if (state.stage !== STAGES.EGG) return state;
 
     state.eggHatchAt = Math.max(now + 10 * SECOND, state.eggHatchAt - CONFIG.petEggBonusMs);
-    state.message = "The egg moved. Hatching got faster.";
+    setMessage(state, "The egg moved. Hatching got faster.");
 
     return tick(state, now);
   }
 
   function setName(state, newName, now = nowWithOffset(state)) {
     state = tick(state, now);
-  
+
     if (state.stage !== STAGES.EGG) {
-      state.message = `${state.name || "Tomogachi"} already knows who it is.`;
+      setMessage(state, `${state.name || "Tomogachi"} already knows who it is.`);
       return state;
     }
-  
+
     const cleanName = String(newName || "")
       .trim()
       .replace(/\s+/g, " ")
       .slice(0, 16);
-  
+
     state.name = cleanName || "Tomogachi";
-  
+
     if (state.name.toLowerCase() === "laura") {
       state.accessories.bow = true;
-      state.message = "Laura is the perfect name.";
+      setMessage(state, "Laura is the perfect name.");
     } else {
       state.accessories.bow = false;
-      state.message = `${state.name} accepts this name from inside the egg.`;
+      setMessage(state, `${state.name} accepts this name from inside the egg.`);
     }
-  
+
     return state;
-}
-  
+  }
+
   function feed(state, foodType, now = nowWithOffset(state)) {
     state = tick(state, now);
 
     if (state.stage === STAGES.EGG || state.stage === STAGES.DEAD || state.isSleeping) {
+      return state;
+    }
+
+    if (!state.needs.food && state.stats.hunger <= 45) {
+      setMessage(state, `${state.name || "Tomogachi"} is not hungry right now.`);
       return state;
     }
 
@@ -488,8 +492,6 @@
     scheduleNeed(state, "food", now);
     return state;
   }
-
-
 
   function attemptPlay(state, now = nowWithOffset(state)) {
     state = tick(state, now);
@@ -540,15 +542,11 @@
     state.stats.energy = clamp(state.stats.energy - 12);
     state.stats.hunger = clamp(state.stats.hunger + 8);
 
-    setMessage(
-      state,
-      `${state.name || "Tomogachi"} had fun playing Pong.`
-    );
+    setMessage(state, `${state.name || "Tomogachi"} had fun playing Pong.`);
 
     scheduleNeed(state, "play", now);
     return state;
   }
-
 
   function clean(state, now = nowWithOffset(state)) {
     state = tick(state, now);
@@ -596,7 +594,6 @@
     return state;
   }
 
-
   function sleep(state, now = nowWithOffset(state)) {
     state = tick(state, now);
 
@@ -622,7 +619,6 @@
     return state;
   }
 
-
   function skipTestTime(state, now = nowWithOffset(state)) {
     state = sanitizeState(state, now);
     state.timeOffsetMs += CONFIG.testSkipMs;
@@ -643,16 +639,16 @@
   }
 
   function makeEggSprite() {
-  return [
-    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
-    "⠀⠀⠀⠀⠀⢀⣀⣀⡀⠀⠀⠀",
-    "⠀⠀⠀⠀⢰⣿⣿⣿⣿⡆⠀⠀",
-    "⠀⠀⠀⢀⣿⣿⣿⣿⣿⣿⡀⠀",
-    "⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⡇⠀",
-    "⠀⠀⠀⠘⣿⣿⣿⣿⣿⣿⠃⠀",
-    "⠀⠀⠀⠀⠈⠛⠛⠛⠛⠁⠀⠀"
-  ].join("\n");
-}
+    return [
+      "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+      "⠀⠀⠀⠀⠀⢀⣀⣀⡀⠀⠀⠀",
+      "⠀⠀⠀⠀⢰⣿⣿⣿⣿⡆⠀⠀",
+      "⠀⠀⠀⢀⣿⣿⣿⣿⣿⣿⡀⠀",
+      "⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⡇⠀",
+      "⠀⠀⠀⠘⣿⣿⣿⣿⣿⣿⠃⠀",
+      "⠀⠀⠀⠀⠈⠛⠛⠛⠛⠁⠀⠀"
+    ].join("\n");
+  }
 
   function makeTombstoneSprite(name = "Tomogachi") {
     return [
@@ -665,6 +661,7 @@
       "⠀⠀⠛⠛⠛⠛⠛⠛⠛⠛⠛⠀"
     ].join("\n");
   }
+
   function makeSprite(face) {
     return [
       "⠀⠀⠀⠀⠀⠀⠀⠀⡴⠒⢦⠀⠀⠀⡴⠲⣄",
@@ -679,8 +676,8 @@
   function makeBowSprite(face) {
     return [
       "⠀⠀⠀⠀⠀⠀⠀⠀⡴⠒⢦⠀⠀⠀⡴⠲⣄",
-      "⠀⠀⠀⠀⠀⠀⠀⠀⡇⡄⢸⠀⠀⠀⡇⡀⢹",
-      "⠀⠀⠀⠀⠀⠀⠀⣀⡧⠷⠚⠓🎀⠧⣇⣸",
+      "⠀⠀⠀⠀⠀⠀⠀🎀⡇⡄⢸⠀⠀⠀⡇⡀⢹",
+      "⠀⠀⠀⠀⠀⠀⠀⣀⡧⠷⠚⠓⠒⠦⠧⣇⣸",
       "⠀⠀⠀⠀⠀⠀⢰⠃⠀⠀⠀⠀⠀⠀⠀⠀⠈⢧",
       `⠀⠀⠀⠀⠀⠀⠘⡆⠀${face}⠀⢈⡇`,
       "⠀⠀⠀⠀⠀⠀⠀⠙⠶⠤⠤⠤⠤⠤⠤⠤⠖⠋"
@@ -770,11 +767,11 @@
 
   function getStatusText(state) {
     const name = state.name || "Tomogachi";
-  
+
     if (state.stage === STAGES.DEAD) {
-      return `${name} has left this tiny world.`;
+      return state.message || `${name} has left this tiny world.`;
     }
-  
+
     if (state.stage === STAGES.EGG) {
       const eggMessages = [
         "Something inside the egg taps back.",
@@ -783,45 +780,42 @@
         "The egg is warm. It wants attention.",
         "The shell shakes with mysterious determination."
       ];
-  
+
       return state.message || eggMessages[Math.floor(Math.random() * eggMessages.length)];
     }
-  
+
     if (state.isSleeping) {
-      const sleepMessages = [
-        `${name} is dreaming of pixel snacks.`,
-        `${name} is asleep. The room feels quieter.`,
-        `${name} has entered battery-saving mode.`,
-        `${name} is snoring in lowercase.`
-      ];
-  
-      return sleepMessages[Math.floor(Math.random() * sleepMessages.length)];
+      return state.message || `${name} is asleep. The room feels quieter.`;
     }
-  
+
     if (state.health <= 25) {
-      return `${name} looks fragile. It needs care soon.`;
+      return state.message || `${name} looks fragile. It needs care soon.`;
     }
-  
+
     if (state.needs.clean) {
       return `${name} has created a biohazard situation.`;
     }
-  
+
     if (state.needs.food) {
       return `${name} is staring at you like you are the fridge.`;
     }
-  
+
     if (state.needs.play) {
       return `${name} is bouncing with dangerous amounts of boredom.`;
     }
-  
+
     if (state.needs.sleep) {
       return `${name} is blinking one eye at a time.`;
     }
-  
+
+    if (state.message && state.message.trim()) {
+      return state.message;
+    }
+
     if (state.stats.happiness >= 75 && state.stats.hunger <= 35) {
       return `${name} is thriving in its tiny rectangle.`;
     }
-  
+
     const neutralMessages = [
       `${name} is vibing quietly.`,
       `${name} is contemplating browser tabs.`,
@@ -829,8 +823,8 @@
       `${name} is waiting for something interesting to happen.`,
       `${name} accepts your existence.`
     ];
-  
-    return state.message || neutralMessages[Math.floor(Math.random() * neutralMessages.length)];
+
+    return neutralMessages[Math.floor(Math.random() * neutralMessages.length)];
   }
 
   function getDisplay(state, now = nowWithOffset(state)) {
