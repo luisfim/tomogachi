@@ -84,6 +84,10 @@
         playRefusals: 0,
         lastFoodRefusalAt: null
       },
+
+      accessories: {
+        bow: false
+      },
       
       needs: {
         food: null,
@@ -111,6 +115,10 @@
     state.stats = { ...fresh.stats, ...(input && input.stats ? input.stats : {}) };
     state.needs = { ...fresh.needs, ...(input && input.needs ? input.needs : {}) };
     state.nextNeedAt = { ...fresh.nextNeedAt, ...(input && input.nextNeedAt ? input.nextNeedAt : {}) };
+    state.accessories = {
+      ...fresh.accessories,
+      ...(input && input.accessories ? input.accessories : {})
+    };
 
     if (!state.stage) state.stage = STAGES.EGG;
     if (!state.createdAt) state.createdAt = now;
@@ -420,10 +428,17 @@
       .slice(0, 16);
   
     state.name = cleanName || "Tomogachi";
-    state.message = `${state.name} accepts this name from inside the egg.`;
+  
+    if (state.name.toLowerCase() === "laura") {
+      state.accessories.bow = true;
+      state.message = "Laura is the perfect name.";
+    } else {
+      state.accessories.bow = false;
+      state.message = `${state.name} accepts this name from inside the egg.`;
+    }
   
     return state;
-  }
+}
   
   function feed(state, foodType, now = nowWithOffset(state)) {
     state = tick(state, now);
@@ -596,7 +611,7 @@
     if (!isSleepy) {
       setMessage(
         state,
-        `${state.name || "Tomogachi"} lies down, immediately gets up, and decides sleep was a bad idea.`
+        `${state.name || "Tomogachi"} lies down, but is not really sleeping.`
       );
 
       scheduleNeed(state, "sleep", now);
@@ -658,6 +673,13 @@
       "⠀⠀⠀⠀⠀⠀⢰⠃⠀⠀⠀⠀⠀⠀⠀⠀⠈⢧",
       `⠀⠀⠀⠀⠀⠀⠘⡆⠀${face}⠀⢈⡇`,
       "⠀⠀⠀⠀⠀⠀⠀⠙⠶⠤⠤⠤⠤⠤⠤⠤⠖⠋"
+    ].join("\n");
+  }
+
+  function addBowToSprite(sprite) {
+    return [
+      "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀🎀",
+      sprite
     ].join("\n");
   }
 
@@ -822,7 +844,9 @@
           ? makeEggSprite()
           : state.stage === STAGES.DEAD
             ? makeTombstoneSprite(state.name)
-            : makeSprite(getFace(state)),
+            : state.accessories.bow
+              ? addBowToSprite(makeSprite(getFace(state)))
+              : makeSprite(getFace(state)),
       activeNeeds: getActiveNeeds(state),
       badgeText: getBadgeText(state, now),
       isSleeping: state.isSleeping,
