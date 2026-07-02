@@ -1,7 +1,7 @@
 {
-  "manifest_version": 4,
+  "manifest_version": 3,
   "name": "Tomogachi",
-  "version": "4.0",
+  "version": "3.0",
   "description": "A simple Tomogachi pet game.",
   "icons": {
     "16": "icons/icon16.png",
