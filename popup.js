@@ -207,6 +207,7 @@ async function startPong() {
   }
 
   isPlayingPong = true;
+  isEndingPong = false;
   pongPanel.classList.remove("hidden");
 
   const difficulty = getPongDifficulty();
@@ -357,7 +358,7 @@ function animatePong() {
 
   if (pong.ballX > pong.width) {
     pong.score += 1;
-    pongStatus.textContent = `Score: ${pong.score} / 3`;
+    pongStatus.textContent = `You: ${pong.score} / 3`;
     resetBall(-1);
   }
 
@@ -379,27 +380,28 @@ function animatePong() {
 
   if (pong.score >= 3) {
     pongStatus.textContent = "You won! Tomogachi had fun.";
-  
+
     finishPong(true).catch((error) => {
       console.error("Failed to finish Pong:", error);
       closePong();
     });
-  
+
     return;
   }
-  
+
   if (pong.enemyScore >= 3) {
-      pongStatus.textContent = "Tomogachi won this round.";
-  
-      finishPong(false).catch((error) => {
-        console.error("Failed to close Pong:", error);
-        closePong();
-      });
-  
-      return;
+    pongStatus.textContent = "Tomogachi won this round.";
+
+    finishPong(false).catch((error) => {
+      console.error("Failed to close Pong:", error);
+      closePong();
+    });
+
+    return;
   }
 
-pongAnimationId = requestAnimationFrame(animatePong);
+  pongAnimationId = requestAnimationFrame(animatePong);
+}
 
 function bindHoldButton(button, key) {
   button.addEventListener("pointerdown", () => {
