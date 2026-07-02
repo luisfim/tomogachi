@@ -676,10 +676,14 @@
     ].join("\n");
   }
 
-  function addBowToSprite(sprite) {
+  function makeBowSprite(face) {
     return [
-      "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀🎀",
-      sprite
+      "⠀⠀⠀⠀⠀⠀⠀⠀⡴⠒⢦⠀⠀⠀⡴⠲⣄",
+      "⠀⠀⠀⠀⠀⠀⠀⠀⡇⡄⢸⠀⠀⠀⡇⡀⢹",
+      "⠀⠀⠀⠀⠀⠀⠀⣀⡧⠷⠚⠓🎀⠧⣇⣸",
+      "⠀⠀⠀⠀⠀⠀⢰⠃⠀⠀⠀⠀⠀⠀⠀⠀⠈⢧",
+      `⠀⠀⠀⠀⠀⠀⠘⡆⠀${face}⠀⢈⡇`,
+      "⠀⠀⠀⠀⠀⠀⠀⠙⠶⠤⠤⠤⠤⠤⠤⠤⠖⠋"
     ].join("\n");
   }
 
@@ -844,8 +848,8 @@
           ? makeEggSprite()
           : state.stage === STAGES.DEAD
             ? makeTombstoneSprite(state.name)
-            : state.accessories.bow
-              ? addBowToSprite(makeSprite(getFace(state)))
+            : state.accessories && state.accessories.bow
+              ? makeBowSprite(getFace(state))
               : makeSprite(getFace(state)),
       activeNeeds: getActiveNeeds(state),
       badgeText: getBadgeText(state, now),
