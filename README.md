@@ -4,7 +4,7 @@
 
 
 ## Screenshot
-<img src="./screenshot.jpeg" alt="Tomogachi screenshot" width="200">
+<img src="./screenshot.jpeg" alt="Tomogachi screenshot" width="400">
 
 ## How to add to you chromium based web browser:
 
